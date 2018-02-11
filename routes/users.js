@@ -1,5 +1,7 @@
 let express = require('express');
 let router = express.Router();
+let knex = require('../knex')
+let admin = require("firebase-admin");
 let service_account = require('../FBAdminSDK.json') // import service_account account config found in FireBase sdk account
 let dbURL = require('../dbURL') // import db url found in FireBase sdk service account config
 
@@ -7,7 +9,7 @@ let dbURL = require('../dbURL') // import db url found in FireBase sdk service a
 admin.initializeApp({
   credential: admin.credential.cert(service_account),
   databaseURL: dbURL
-});
+})
 
 // GET user info based on token credentials.
 router.get('/:id', (req, res, next) => {
@@ -20,9 +22,10 @@ router.get('/:id', (req, res, next) => {
       .select('id')
       .where('uid', uid)
       .then(data => {
+        //send back userID
         res.send(data[0])
       })
-      .catch(error ={
+      .catch(error => {
         res.send(error)
       })
     })
@@ -45,13 +48,13 @@ router.post('/', (req, res, next) => {
       let email = decodedToken.email
       let uid = decodedToken.uid
       let postBody = {
-        email,
-        uid
+        email:email,
+        uid:uid
       }
       knex('users')
-      .insert(postBody)
-      .returning('id')
+      .insert(postBody,'*')
       .then(data => {
+        //send back userID
         res.send(data[0])
       })
       .catch(error => {
